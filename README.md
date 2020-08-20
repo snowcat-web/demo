@@ -96,14 +96,11 @@ You should see events logged in the console where the CLI is running.
 We'll run test mode transaction on your Stripe account to test your solution. If this activity might disrupt your other work you may want to spin up a separate Stripe account just for these challenges.  We recommend you keep the account you use for challenges up to date with the latest API version. 
 
 
-## Submitting your challenge
+## Submitting
 
 When you are done there are 3 steps to submitting your solution:
 
-* Open a pr with the changes you want to merge into master
-* let us know you’ve completed the exam by filling in the template provided. You can either do one push or one per challenge completed. We advise you to create a separate branch in which you can work your solution before merging it into master.
-* Merge your changes to master.
-* To ensure your challenge can be evaluated, we advise you to run the test in `./test`.
+* We advise you to run the test in `./test`.
 
 **Note**: Please make sure all your features run in the lastest version of google chrome.
 
