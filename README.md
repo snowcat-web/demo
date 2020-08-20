@@ -1,4 +1,4 @@
-# Card Payments Certification
+# Card Payments
 
 ### Sections
 [Challenge Overview](/README.md)
