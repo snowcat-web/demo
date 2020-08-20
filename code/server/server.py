@@ -156,7 +156,7 @@ def get_lesson_page():
 #    payment_intent_id: if a payment intent was created but not successfully authorized
 # }
 @app.route("/schedule-lesson", methods=["POST"])
-def schdeule-lesson():
+def schdeule_lesson():
     return 0
 
 
