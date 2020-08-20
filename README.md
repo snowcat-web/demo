@@ -19,28 +19,28 @@
 To goal is to complete the app started in this repo, a website for a music store.  To get started: 
 
 * Read this doc to get an overview of how it is set up. 
-* Complete all three sections of the challenge. When you've finished, deploy your solution and push it back to this repo.
+* Complete all three sections. When you've finished, deploy your solution and push it back to this repo.
 
 
 **Getting Help**
 
 If you need any help please reach out to verification@stripe.com 
 
-# Challenge Overview
+# Overview
 
 Looking to grow their business a US-based music school wants to expand their online presence to include selling instructional videos, concert tickets and by offering online lessons. 
 
 # Using the provided starter code
 
-Within the code directory you'll find the [starter code](code/) for client and server you selected to complete the challenge.
+Within the code directory you'll find the [starter code](code/) for client and server you selected to complete.
 
-The README for each section of the challenge provides more information about the starter code specific for that section. 
+The README for each section provides more information about the starter code specific for that section. 
 
 We hope the starter code is helpful to you, but feel free to use a different framework if that's easier for you.  Please let us know in the feedback doc why you decided to not use the starter code and how we could make it better.
 
 ## Running locally
 
-As a first step in completing the challenge we recommend you get your local server up and running:
+As a first step in completing we recommend you get your local server up and running:
 
 **1. First checkout the repo and configure the environment variables:**
 
@@ -93,7 +93,7 @@ You should see events logged in the console where the CLI is running.
 
 ## Your Stripe Account
 
-We'll run test mode transaction on your Stripe account to test your solution. If this activity might disrupt your other work you may want to spin up a separate Stripe account just for these challenges.  We recommend you keep the account you use for challenges up to date with the latest API version. 
+We'll run test mode transaction on your Stripe account to test your solution. If this activity might disrupt your other work you may want to spin up a separate Stripe account just for these sections.  We recommend you keep the account you use up to date with the latest API version. 
 
 
 ## Submitting
