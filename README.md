@@ -16,9 +16,9 @@
 [Section 6: Lesson Reporting](README-pt6-reporting.md)
 
 # Getting started
-To goal of this coding challenge is to complete the app started in this repo, a website for a music store.  To get started: 
+To goal is to complete the app started in this repo, a website for a music store.  To get started: 
 
-* Read this doc to get an overview of how the challenge is set up. 
+* Read this doc to get an overview of how it is set up. 
 * Complete all three sections of the challenge. When you've finished, deploy your solution and push it back to this repo.
 
 
