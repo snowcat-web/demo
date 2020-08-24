@@ -1,14 +1,14 @@
 import React, {useEffect, useState} from "react";
 import {CardElement, useElements, useStripe} from "@stripe/react-stripe-js";
 
-export default function CardElementForm(props) {
+export default function CardElementForm({handleChange}) {
   const [error, setError] = useState(null);
   const [disabled, setDisabled] = useState(true);
   const [token, setToken] = useState(null);
   const elements = useElements();
   const stripe = useStripe();
 
-  const handleChange = async (event) => {
+  const handleCardChange = async (event) => {
     // Listen for changes in the CardElement
     // and display any errors as the customer types their card details
     setDisabled(event.empty);
@@ -24,13 +24,13 @@ export default function CardElementForm(props) {
   };
 
   useEffect(() => {
-    props.handleChange(disabled, error, JSON.stringify(token));
-  }, [disabled, error, token, props]);
+    handleChange(disabled, error, JSON.stringify(token));
+  }, [disabled, error, token, handleChange]);
 
   return (
     <CardElement
       id="card-element"
-      onChange={handleChange}
+      onChange={handleCardChange}
     />
   );
 }

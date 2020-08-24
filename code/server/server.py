@@ -12,8 +12,11 @@ import os
 from flask import Flask, render_template, jsonify, request
 from dotenv import load_dotenv, find_dotenv
 
-load_dotenv(find_dotenv())
+import stripe
 
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+
+load_dotenv(find_dotenv())
 
 static_dir = str(os.path.abspath(os.path.join(__file__, "..", os.getenv("STATIC_DIR"))))
 
@@ -116,15 +119,70 @@ def setup_video_store():
         return jsonify(error=str(e)), 403
 
 
+def get_stripe_customer(customer_email):
+    response = stripe.Customer.list(email=customer_email)
+    if len(response.data):
+        return True, response.data[0]
+    else:
+        return False, None
+
+
+def create_stripe_customer(name, email, date_time, token):
+    try:
+        new_customer = stripe.Customer.create(
+            name=name,
+            email=email,
+            card=token["id"],
+            metadata={
+                "first_lesson": date_time
+            }
+        )
+        return new_customer
+    except Exception as e:
+        print(e)
+        return None
+
+
 ### Challenge Section 3
 # Challenge section 3: shows the lesson sign up page.
-@app.route("/lessons", methods=["GET"])
+@app.route("/lessons", methods=["GET", "POST"])
 def get_lesson_page():
-    # Display lesson signup
-    if frontend == "vanilla":
-        return render_template("lessons.html")
+    if request.method == "GET":
+        # Display lesson signup
+        if frontend == "vanilla":
+            return render_template("lessons.html")
+        else:
+            return render_template("react_redirect.html")
     else:
-        return render_template("react_redirect.html")
+        email = request.json["email"]
+        name = request.json["name"]
+        date_time = request.json["date_time"]
+        token = request.json["token"]
+        customer_valid, customer_info = get_stripe_customer(email)
+        if customer_valid:
+            return jsonify(
+                {
+                    "error": "CUSTOMER_VALID_ERROR",
+                    "email": customer_info.email,
+                    "cus_id": customer_info.id
+                }
+            ), 400
+        else:
+            new_customer = create_stripe_customer(name, email, date_time, token)
+            if new_customer:
+                return jsonify(
+                    {
+                        "status": "success",
+                        "email": email,
+                        "cus_id": new_customer.id
+                    }
+                )
+            else:
+                return jsonify(
+                    {
+                        "error": "Error creating customer"
+                    }
+                ), 400
 
 
 # Challenge section 4: '/schedule-lesson'
@@ -189,6 +247,7 @@ def schdeule_lesson():
 def complete_lesson_payment():
     return 0
 
+
 # Challenge section 4: '/refund-lesson'
 # Refunds a lesson payment.  Refund the payment from the customer (or cancel the auth
 # if a payment hasn't occurred).
@@ -220,6 +279,7 @@ def complete_lesson_payment():
 @app.route("/refund-lesson", methods=["POST"])
 def refund_lesson():
     return 0
+
 
 ### Challenge Section 5
 # Displays the account update page for a given customer

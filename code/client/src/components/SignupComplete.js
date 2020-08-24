@@ -1,9 +1,9 @@
 import React from "react";
 
-const SingupComplete = ({ active, email, last4, customer_id }) => {
+const SignupComplete = ({ active, email, last4, customer_id }) => {
   if (active) {
     return (
-      <div className="lesson-complete hidden">
+      <div className="lesson-complete">
         <h3 id="signup-status">
           Woohoo!
           {"\n"}
@@ -28,4 +28,4 @@ const SingupComplete = ({ active, email, last4, customer_id }) => {
   }
 };
 
-export default SingupComplete;
+export default SignupComplete;
