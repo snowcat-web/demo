@@ -8,7 +8,6 @@ import isEmail from "validator/lib/isEmail";
 
 const promise = loadStripe("pk_test_51HIHnEI5c5rLhZzj8LtgFxt04cEQNDwhYTiz5uw8fvyv0o4PSrbr6cI5afXb9PgKGrxfG03G5y1k25eeeKl42zjA00t3kKsI9A");
 const CUSTOMER_VALID_ERROR = "CUSTOMER_VALID_ERROR";
-const SUCCESS = "success";
 
 //Registration Form Component, process user info for online session.
 //const textSignup = ;
@@ -58,22 +57,22 @@ export default function RegistrationForm({ selected, details, dateTime }) {
 
       let _response = await signupLesson(state);
       if (_response.error) {
-        if (_response.error === CUSTOMER_VALID_ERROR) {
+        if (_response.error.code === CUSTOMER_VALID_ERROR) {
           setCustomExistError(true);
           setCustomerInfo({
-            email: _response.email,
-            cus_id: _response.cus_id
+            email: _response.error.email,
+            cus_id: _response.error.cus_id
           })
         } else {
-          setError(_response.error);
+          setError(_response.error.message);
         }
         setProcessing(false);
       }
 
-      if (_response.status === SUCCESS) {
+      if (_response.customer) {
         setCustomerInfo({
-          email: _response.email,
-          cus_id: _response.cus_id
+          email: _response.customer.email,
+          cus_id: _response.customer.cus_id
         });
         setSignupComplete(true);
       }

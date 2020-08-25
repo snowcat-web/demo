@@ -127,20 +127,32 @@ def get_stripe_customer(customer_email):
         return False, None
 
 
-def create_stripe_customer(name, email, date_time, token):
+def create_payment_method(token):
+    try:
+        payment_method = stripe.PaymentMethod.create(
+            type="card",
+            card={
+                "token": token["id"]
+            }
+        )
+        return payment_method, None
+    except Exception as e:
+        return None, e
+
+
+def create_stripe_customer(name, email, date_time, payment_method_id):
     try:
         new_customer = stripe.Customer.create(
             name=name,
             email=email,
-            card=token["id"],
+            payment_method=payment_method_id,
             metadata={
                 "first_lesson": date_time
             }
         )
-        return new_customer
+        return new_customer, None
     except Exception as e:
-        print(e)
-        return None
+        return None, e
 
 
 ### Challenge Section 3
@@ -162,25 +174,44 @@ def get_lesson_page():
         if customer_valid:
             return jsonify(
                 {
-                    "error": "CUSTOMER_VALID_ERROR",
-                    "email": customer_info.email,
-                    "cus_id": customer_info.id
+                    "error": {
+                        "code": "CUSTOMER_VALID_ERROR",
+                        "email": customer_info.email,
+                        "cus_id": customer_info.id
+                    }
                 }
             ), 403
         else:
-            new_customer = create_stripe_customer(name, email, date_time, token)
-            if new_customer:
-                return jsonify(
-                    {
-                        "status": "success",
-                        "email": email,
-                        "cus_id": new_customer.id
-                    }
+            payment_method, payment_method_error = create_payment_method(token)
+            if payment_method:
+                new_customer, customer_error = create_stripe_customer(
+                    name, email, date_time, payment_method.id
                 )
+                if new_customer:
+                    return jsonify(
+                        {
+                            "customer": {
+                                "email": email,
+                                "cus_id": new_customer.id
+                            }
+                        }
+                    )
+                else:
+                    return jsonify(
+                        {
+                            "error": {
+                                "code": customer_error.error.code,
+                                "message": customer_error.error.message
+                            }
+                        }
+                    ), 403
             else:
                 return jsonify(
                     {
-                        "error": "Error creating customer"
+                        "error": {
+                            "code": payment_method_error.error.code,
+                            "message": payment_method_error.error.message
+                        }
                     }
                 ), 403
 
