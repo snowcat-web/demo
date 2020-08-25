@@ -166,7 +166,7 @@ def get_lesson_page():
                     "email": customer_info.email,
                     "cus_id": customer_info.id
                 }
-            ), 400
+            ), 403
         else:
             new_customer = create_stripe_customer(name, email, date_time, token)
             if new_customer:
@@ -182,7 +182,7 @@ def get_lesson_page():
                     {
                         "error": "Error creating customer"
                     }
-                ), 400
+                ), 403
 
 
 # Challenge section 4: '/schedule-lesson'
