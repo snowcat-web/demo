@@ -8,6 +8,8 @@ Python 3.6 or newer required.
 
 import json
 import os
+import time
+from datetime import datetime, timedelta
 
 from flask import Flask, render_template, jsonify, request
 from dotenv import load_dotenv, find_dotenv
@@ -458,6 +460,42 @@ def delete_account():
     return 0
 
 
+def get_lesson_payments():
+    start_date = datetime.today() - timedelta(days=7)
+    start_time = int(time.mktime(start_date.timetuple()))
+    payment_list = {"has_more": True}
+    starting_after = ""
+    lesson_payments = []
+
+    try:
+        while payment_list["has_more"]:
+            if starting_after:
+                payment_list = stripe.PaymentIntent.list(
+                    created={
+                        "gte": start_time
+                    },
+                    starting_after=starting_after
+                )
+            else:
+                payment_list = stripe.PaymentIntent.list(
+                    created={
+                        "gte": start_time
+                    }
+                )
+
+            if payment_list["data"]:
+                for item in payment_list["data"]:
+                    if item["metadata"] and item["metadata"]["type"] == "lessons-payment":
+                        lesson_payments.append(item)
+
+                list_length = len(payment_list["data"])
+                starting_after = payment_list["data"][list_length - 1]["id"]
+
+        return lesson_payments, None
+    except Exception as e:
+        return None, e
+
+
 # Challenge section 6: '/calculate-lesson-total'
 # Returns the total amounts for payments for lessons, ignoring payments
 # for videos and concert tickets.
@@ -475,7 +513,38 @@ def delete_account():
 #
 @app.route("/calculate-lesson-total", methods=["POST"])
 def calculate_lesson_total():
-    return 0
+    lesson_payments, e = get_lesson_payments()
+    payment_total = 0
+    fee_total = 0
+    net_total = 0
+
+    if lesson_payments:
+        for item in lesson_payments:
+            if item["status"] == "succeeded":
+                charge_data = item["charges"]["data"][0]
+                payment_total += (charge_data["amount"] - charge_data["amount_refunded"])
+
+                if charge_data["application_fee_amount"]:
+                    fee_total += charge_data["application_fee_amount"]
+
+        net_total = payment_total - fee_total
+
+        return jsonify(
+            {
+                "payment_total": payment_total,
+                "fee_total": fee_total,
+                "net_total": net_total
+            }
+        )
+    else:
+        return jsonify(
+            {
+                "error": {
+                    "code": e.error.code,
+                    "message": e.error.message
+                }
+            }
+        ), 403
 
 
 # Challenge section 6: '/find-customers-with-failed-payments'
