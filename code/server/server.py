@@ -246,7 +246,56 @@ def get_lesson_page():
 # }
 @app.route("/schedule-lesson", methods=["POST"])
 def schdeule_lesson():
-    return 0
+    customer_id = request.form["customer_id"]
+    amount = request.form["amount"]
+    description = request.form["description"]
+
+    # Retrieve Customer's Payment method
+    try:
+        payment_method = stripe.PaymentMethod.list(
+            customer=customer_id,
+            type="card"
+        )
+        payment_method_id = payment_method.data[0].id
+    except Exception as e:
+        return jsonify(
+            {
+                "error": {
+                    "code": e.error.code,
+                    "message": e.error.message,
+                }
+            }
+        ), 403
+
+    try:
+        payment_intent = stripe.PaymentIntent.create(
+            amount=amount,
+            currency="usd",
+            customer=customer_id,
+            payment_method=payment_method_id,
+            description=description,
+            confirmation_method="manual",
+            capture_method="manual",
+            confirm=True,
+            metadata={
+                "type": "lessons-payment"
+            }
+        )
+        return jsonify(
+            {
+                "payment": payment_intent
+            }
+        )
+    except Exception as e:
+        return jsonify(
+            {
+                "error": {
+                    "code": e.error.code,
+                    "message": e.error.message,
+                    "payment_intent_id": e.error.payment_intent
+                }
+            }
+        ), 403
 
 
 # Challenge section 4: '/complete-lesson-payment'
@@ -276,7 +325,33 @@ def schdeule_lesson():
 #
 @app.route("/complete-lesson-payment", methods=["POST"])
 def complete_lesson_payment():
-    return 0
+    payment_intent_id = request.form["payment_intent_id"]
+    amount = request.form.get("amount", None)
+
+    try:
+        if amount:
+            payment_intent = stripe.PaymentIntent.capture(
+                payment_intent_id,
+                amount_to_capture=amount
+            )
+        else:
+            payment_intent = stripe.PaymentIntent.capture(
+                payment_intent_id
+            )
+        return jsonify(
+            {
+                "payment": payment_intent
+            }
+        )
+    except Exception as e:
+        return jsonify(
+            {
+                "error": {
+                    "code": e.error.code,
+                    "message": e.error.message
+                }
+            }
+        ), 403
 
 
 # Challenge section 4: '/refund-lesson'
@@ -309,7 +384,33 @@ def complete_lesson_payment():
 #  }
 @app.route("/refund-lesson", methods=["POST"])
 def refund_lesson():
-    return 0
+    payment_intent_id = request.form["payment_intent_id"]
+    amount = request.form.get("amount", None)
+
+    try:
+        if amount:
+            refund = stripe.Refund.create(
+                payment_intent=payment_intent_id,
+                amount=amount
+            )
+        else:
+            refund = stripe.Refund.create(
+                payment_intent=payment_intent_id
+            )
+        return jsonify(
+            {
+                "refund": refund.id
+            }
+        )
+    except Exception as e:
+        return jsonify(
+            {
+                "error": {
+                    "code": e.error.code,
+                    "message": e.error.message
+                }
+            }
+        ), 403
 
 
 ### Challenge Section 5
