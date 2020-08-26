@@ -216,6 +216,17 @@ def get_lesson_page():
                 ), 403
 
 
+def retrieve_customer_payment(customer_id):
+    try:
+        payment_method = stripe.PaymentMethod.list(
+            customer=customer_id,
+            type="card"
+        )
+        return payment_method.data[0], None
+    except Exception as e:
+        return None, e
+
+
 # Challenge section 4: '/schedule-lesson'
 # Authorize a payment for a lesson
 #
@@ -250,19 +261,15 @@ def schdeule_lesson():
     amount = request.form["amount"]
     description = request.form["description"]
 
-    # Retrieve Customer's Payment method
-    try:
-        payment_method = stripe.PaymentMethod.list(
-            customer=customer_id,
-            type="card"
-        )
-        payment_method_id = payment_method.data[0].id
-    except Exception as e:
+    customer_payment, e = retrieve_customer_payment(customer_id)
+    if customer_payment:
+        payment_method_id = customer_payment.id
+    else:
         return jsonify(
             {
                 "error": {
                     "code": e.error.code,
-                    "message": e.error.message,
+                    "message": e.error.message
                 }
             }
         ), 403
