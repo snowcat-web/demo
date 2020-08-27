@@ -494,7 +494,7 @@ def get_lesson_payments():
 
         if payment_list["data"]:
             for item in payment_list["data"]:
-                if item["metadata"] and item["metadata"]["type"] == "lessons-payment":
+                if item["metadata"] and "type" in item["metadata"] and item["metadata"]["type"] == "lessons-payment":
                     lesson_payments.append(item)
 
             list_length = len(payment_list["data"])
