@@ -518,32 +518,10 @@ def get_lesson_payments():
 #      net_total: net amount the store has earned from the payments.
 # }
 #
-@app.route("/calculate-lesson-total", methods=["POST"])
+@app.route("/calculate-lesson-total", methods=["GET"])
 def calculate_lesson_total():
     lesson_payments, e = get_lesson_payments()
-    payment_total = 0
-    fee_total = 0
-    net_total = 0
-
-    if lesson_payments:
-        for item in lesson_payments:
-            if item["status"] == "succeeded":
-                charge_data = item["charges"]["data"][0]
-                payment_total += (charge_data["amount"] - charge_data["amount_refunded"])
-
-                if charge_data["application_fee_amount"]:
-                    fee_total += charge_data["application_fee_amount"]
-
-        net_total = payment_total - fee_total
-
-        return jsonify(
-            {
-                "payment_total": payment_total,
-                "fee_total": fee_total,
-                "net_total": net_total
-            }
-        )
-    else:
+    if e:
         return jsonify(
             {
                 "error": {
@@ -552,6 +530,34 @@ def calculate_lesson_total():
                 }
             }
         ), 403
+
+    payment_total = 0
+    fee_total = 0
+    for item in lesson_payments:
+        if item["status"] == "succeeded":
+            charge_data = item["charges"]["data"][0]
+            payment_total += (charge_data["amount"] - charge_data["amount_refunded"])
+
+            if charge_data["application_fee_amount"]:
+                fee_total += charge_data["application_fee_amount"]
+
+    net_total = payment_total - fee_total
+
+    return jsonify(
+        {
+            "payment_total": payment_total,
+            "fee_total": fee_total,
+            "net_total": net_total
+        }
+    )
+
+
+def retrieve_customer(customer_id):
+    try:
+        customer = stripe.Customer.retrieve(customer_id)
+        return customer, None
+    except Exception as e:
+        return None, e
 
 
 # Challenge section 6: '/find-customers-with-failed-payments'
@@ -585,9 +591,78 @@ def calculate_lesson_total():
 #   <customer_id>: {},
 # }
 #
-@app.route("/find-customers-with-failed-payments", methods=["POST"])
+@app.route("/find-customers-with-failed-payments", methods=["GET"])
 def find_customers():
-    return 1
+    lesson_payments, e = get_lesson_payments()
+    if e:
+        return jsonify(
+            {
+                "error": {
+                    "code": e.error.code,
+                    "message": e.error.message
+                }
+            }
+        ), 403
+
+    failed_payments = []
+    for lesson_payment in lesson_payments:
+        if lesson_payment["last_payment_error"]:
+            is_last_payment = True
+
+            for failed_payment in failed_payments:
+                if failed_payment["customer"] == lesson_payment["customer"]:
+                    is_last_payment = False
+
+            if is_last_payment:
+                failed_payments.append(lesson_payment)
+
+    failed_customers_info = []
+    for failed_payment in failed_payments:
+        customer_id = failed_payment["customer"]
+
+        customer, e = retrieve_customer(customer_id)
+        if e:
+            return jsonify(
+                {
+                    "error": {
+                        "code": e.error.code,
+                        "message": e.error.message
+                    }
+                }
+            ), 403
+
+        customer_payment, e = retrieve_customer_payment(customer_id)
+        if e:
+            return jsonify(
+                {
+                    "error": {
+                        "code": e.error.code,
+                        "message": e.error.message
+                    }
+                }
+            ), 403
+
+        customer_info = {
+            customer_id: {
+                "customer": {
+                    "email": customer["email"],
+                    "name": customer["name"]
+                },
+                "payment_intent": {
+                    "created": failed_payment["created"],
+                    "description": failed_payment["description"],
+                    "status": failed_payment["status"],
+                    "error": failed_payment["last_payment_error"],
+                },
+                "payment_method": {
+                    "last4": customer_payment["card"]["last4"],
+                    "brand": customer_payment["card"]["brand"]
+                },
+            }
+        }
+        failed_customers_info.append(customer_info)
+
+    return jsonify(failed_customers_info)
 
 
 if __name__ == "__main__":
