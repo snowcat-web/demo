@@ -474,8 +474,8 @@ def get_lesson_payments():
     starting_after = ""
     lesson_payments = []
 
-    try:
-        while payment_list["has_more"]:
+    while payment_list["has_more"]:
+        try:
             if starting_after:
                 payment_list = stripe.PaymentIntent.list(
                     created={
@@ -489,18 +489,18 @@ def get_lesson_payments():
                         "gte": start_time
                     }
                 )
+        except Exception as e:
+            return None, e
 
-            if payment_list["data"]:
-                for item in payment_list["data"]:
-                    if item["metadata"] and item["metadata"]["type"] == "lessons-payment":
-                        lesson_payments.append(item)
+        if payment_list["data"]:
+            for item in payment_list["data"]:
+                if item["metadata"] and item["metadata"]["type"] == "lessons-payment":
+                    lesson_payments.append(item)
 
-                list_length = len(payment_list["data"])
-                starting_after = payment_list["data"][list_length - 1]["id"]
+            list_length = len(payment_list["data"])
+            starting_after = payment_list["data"][list_length - 1]["id"]
 
-        return lesson_payments, None
-    except Exception as e:
-        return None, e
+    return lesson_payments, None
 
 
 # Challenge section 6: '/calculate-lesson-total'
